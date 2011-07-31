@@ -54,6 +54,9 @@
       (.addElement pattern n))
     (.play player pattern)))
 
+(defn add-note [pattern pitch dur]
+   (.addElement pattern (new org.jfugue.Note (byte pitch) dur)))
+
 (defn sequence->pattern [pitches dur]
   (let [pattern (new org.jfugue.Pattern)]
     (doseq [pitch pitches]
@@ -68,8 +71,7 @@
 	       (new org.jfugue.Note (byte (nth nnote 0)) (nth nnote 1))))
 	   (new org.jfugue.Note (byte (nth start 0)) (nth start 1))))
 
-(defn add-note [pattern pitch dur]
-   (.addElement pattern (new org.jfugue.Note (byte pitch) dur)))
+
 
 ;;; Keys
 
