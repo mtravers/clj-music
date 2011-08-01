@@ -1,0 +1,384 @@
+[copied from gdoc]
+
+Making Music with Clojure and JFugue
+Making music with Clojure and JFugue
+
+Mike Travers and Ben Travers
+
+feedback to mt(at)hyperphor.com
+Lesson 1: Getting Started
+
+ 
+
+1) Download Clojure from http://clojure.org/downloads
+
+Let’s assume you download this and jfugue into your ~/Downloads directory
+
+ 
+
+2) Download JFugue from http://www.jfugue.org/
+
+ 
+
+3) Get a terminal prompt (on the Mac, run Applications/Utilities/Terminal, on other operating systems you’ll have to figure out how to do something similar):
+
+
+4) Start Clojure:
+
+bash-3.2$ java -jar ~/Downloads/clojure-1.2.0/clojure.jar
+
+Clojure 1.2.0
+
+user=>
+
+5) Load JFugue into Clojure:
+
+user=> (add-classpath "file:///Users/mt/Downloads/jfugue-4.0.3.jar")
+WARNING: add-classpath is deprecated
+nil
+user=>
+ 
+
+We’re using a slightly-unapproved method to do this so Clojure scolds us, but don’t worry about that.
+ 
+
+6) Make a player object:
+ 
+
+user=> (def player (new org.jfugue.Player))
+
+#'user/player
+
+ 
+
+This will open up a Java application window and may change your focus, so click back on your terminal window.
+
+ 
+
+To break this down: def means we are defining a name for something.  In this case, the name is player and the something is a Player object.  The expression (new …) creates a new object of a particular class, in this case org.jfugue.Player from the jfugure library.
+
+ 
+
+7) Play a scale:
+
+user=> (.play player "C D E F G A B")
+
+nil
+
+ 
+
+What’s going here is that we are taking the Player object we created in step 6) and calling a method on it, which is how you get objects to do things for you. In this case the method is play, and we are including in the call a parameter or argument of "C D E F G A B".
+
+ 
+
+8) Play something more interesting, and learn some more of JFugue's syntax.
+
+ 
+
+user=> (.play player "T120 I[Cello] G3q G3q G3q Eb3i Bb3i G3q Eb3i Bb3i G3h")
+
+nil
+
+ 
+
+ 
+
+ 
+Lesson 2: Patterns
+
+ 
+
+Here we will learn about pattern objects.  A pattern is a stored fragment of music that can be reused and combined to form a song.  Note that this and some other examples are adapted directly from the JFugue documentation: http://www.jfugue.org/examples.html
+
+ 
+
+1) Define some patterns (you don’t have to type the comments, which are the lines starting with semicolons).  
+
+ 
+
+;; Frere Jacques
+
+(def pattern1 (new org.jfugue.Pattern "C5q D5q E5q C5q"))
+
+;; "Dormez-vous?"
+
+(def pattern2 (new org.jfugue.Pattern "E5q F5q G5h"))
+
+;; "Sonnez les matines"
+
+(def pattern3 (new org.jfugue.Pattern "G5i A5i G5i F5i E5q C5q"))
+
+;; "Ding ding dong"
+
+(def pattern4 (new org.jfugue.Pattern "C5q G4q C5h"))
+
+ 
+
+2) Combine them into a song
+
+ 
+
+(def song (new org.jfugue.Pattern))
+
+(.add song pattern1 2)  ; Adds 'pattern1' to 'song' twice
+
+(.add song pattern2 2)  ; Adds 'pattern2' to 'song' twice
+
+(.add song pattern3 2)  ; Adds 'pattern3' to 'song' twice
+
+(.add song pattern4 2)  ; Adds 'pattern4' to 'song' twice
+
+ 
+
+3) Play it:
+
+(.play player song)
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+Lesson 3: Notes and functions
+
+ 
+
+1) Make a note object
+
+ 
+
+(def note (new org.jfugue.Note (byte 40) 0.1))
+
+ 
+
+40 is the pitch (Eb1) and 0.1 is the duration in seconds.  Don’t worry about the byte just now.
+
+ 
+
+2) Add the note to a pattern and play it
+
+        
+
+(def p2 (new org.jfugue.Pattern))
+
+(.addElement p2 note)
+
+(.play player p2)
+
+ 
+
+3) Make it easier on ourselves by defining a procedure.  It’s kind of a pain to have to type that long thing in step 1) every time we want to make a note.  Let’s say we know we want to make a lot of notes with the same duration, and we don’t want to type that each time.  We can make life simpler by defining a procedure of our own.
+
+ 
+
+(defn make-note [pitch]
+
+  (new org.jfugue.Note (byte pitch) 0.1))
+
+ 
+
+(def note (make-note 40))
+
+ 
+
+We just did the same thing we did in step 1), but by using a procedure we can make it easier on ourselves if we want to make more notes.
+
+ 
+
+(.addElement p2 (make-note 42))
+
+(.addElement p2 (make-note 37))
+
+(.play player p2)
+
+ 
+
+Some things to note (excuse the expression):
+
+defn is the statement used to define new procedures
+
+parameters to procedure definitions are enclosed in square brackets [ ].  This is clojure syntax for sequences of things (vectors) and will be encountered in a few other places as well.
+
+ 
+
+Lession 3.5: Iteration
+
+ 
+
+Try this:
+
+ 
+
+(dotimes [i 20]
+
+ (print i)
+
+ (print ": ")
+
+ (print (* i i))
+
+ (newline))
+
+ 
+
+dotimes is a Clojure form that introduces a variable (in the case above, i) and makes it take on values from 0 to a given number (above, 10) (should that be 20?), and executes some statements repeatedly with i assigned these values.  The fancy word for this kind of repition is iteration.
+
+ 
+
+Here’s a musical application of iteration:
+
+ 
+
+        (def up-pattern (new org.jfugue.Pattern))
+
+ 
+
+(dotimes [i 10]
+
+                      (.addElement up-pattern (make-note (+ i 20))))
+
+ 
+
+(.play player up-pattern)
+
+        
+
+        
+
+Look, we’ve made music according to a very simple mathematical rule, or algorithm!
+
+ 
+
+ 
+
+ 
+Lesson 4:  Algorithmic composition
+
+ 
+
+The real reason to use a programming language to create music is that you can generate notes algorithmically, rather than having to put them in explictly in songs.  Here’s some simple illustrations of what that means:
+
+ 
+
+(defn add-note [pattern pitch dur]
+
+  (.addElement pattern (new org.jfugue.Note (byte pitch) dur)))
+
+ 
+
+(defn ascending-pattern [from to dur]
+
+ (let [pattern (new org.jfugue.Pattern)]
+
+        (dotimes [i (- to from)]
+
+         (add-note pattern (+ from i) dur)
+
+        pattern)))
+
+ 
+
+;; Try some different values for the parameters to ascending-pattern
+
+(def ascend (ascending-pattern 40 60 0.1))
+
+(.play player ascend)
+
+ 
+
+Things to explain:
+
+- add-note as a convenience that makes our main function smaller and easier to read
+
+- let as a way to introduce local variables
+
+ 
+
+ 
+Lesson 5: Random compositions
+
+ 
+
+In this lesson we will use some math functions to generate some aleatoric (random) music.  
+
+ 
+
+First, define the function irandom, which returns a random integer between 0 and n.  irandom uses some of the built-in math functions, but you don’t have to worry about them now.  Try evaluating (irandom 100) a few times. You can also try evaluating (Math/random) a few times to see how irandom is built.
+
+ 
+
+(defn irandom [n]
+
+ (Math/round (Math/floor (* n (Math/random)))))
+
+ 
+
+Next, define this function that makes a sequence of random notes. It works much like ascending-pattern above.
+
+ 
+
+(defn random-note-pattern [n dur]
+
+ (let [pattern (new org.jfugue.Pattern)]
+
+        (dotimes [i n]
+
+               (add-note pattern (irandom 128) dur))
+
+        pattern))
+
+ 
+
+(.play player (random-note-pattern 50 0.05))
+
+ 
+
+Here’s an exercise: try to define a function that generates a pattern where each note varies from the previous by a random interval.
+
+ 
+
+(defn plusorminus [n]
+
+ (- (irandom (* 2 (+ n 1))) n))
+
+ 
+
+ 
+
+(defn drunk [n x dur]
+
+ (let [pattern (new org.jfugue.Pattern)]
+
+ (def y)
+
+ (binding [y (irandom 128)]
+
+   (dotimes [i n]
+
+     (set! y (mod (+ (plusorminus x) y) 127))
+
+     (add-note pattern y dur))
+
+   pattern)))
+
+ 
+
+ 
+Topics for further lessons (suggestions welcome):
+
+- polyphony
+
+- responding to Midi events
+
+- input, process, and output Midi files
+
+ 
+
+ 
+Edit this page (if you have permission)–Published by Google Docs–Report Abuse–Updated automatically every 5 minutes

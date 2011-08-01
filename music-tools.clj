@@ -47,6 +47,12 @@
 (defn get-pitch [string]
   (.getValue (org.jfugue.MusicStringParser/getNote string)))
 
+;;; play a single note
+(defn play-note [player pitch dur]
+  (let [pattern (new org.jfugue.Pattern)]
+    (.addElement pattern (new org.jfugue.Note (byte pitch) dur))
+    (.play player pattern)))
+
 ;;; takes a list of note objects
 (defn play-note-list [l]
   (let [pattern (new org.jfugue.Pattern)]
@@ -54,8 +60,16 @@
       (.addElement pattern n))
     (.play player pattern)))
 
+(defn make-note [pitch dur]
+  (new org.jfugue.Note (byte pitch) dur))  
+
 (defn add-note [pattern pitch dur]
-   (.addElement pattern (new org.jfugue.Note (byte pitch) dur)))
+   (.addElement pattern (make-note pitch dur)))
+
+(defn make-pattern [note]
+  (let [pattern (new org.jfugue.Pattern)]
+    (.addElement pattern note)
+    pattern))
 
 (defn sequence->pattern [pitches dur]
   (let [pattern (new org.jfugue.Pattern)]
