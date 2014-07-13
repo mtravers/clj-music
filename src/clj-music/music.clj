@@ -87,6 +87,13 @@
 ;;; (.play player (pitch-time-beat 50 '(52 66 69 71) (scale '(4 3 1) 0.03)))
 ;;; (.play player (pitch-time-beat 50 '(33 47 48 50 45) (scale '(2 1 3 2) 0.04)))
 
+;;; Less retarded version of above. Looks like I have learned something!
+(defn pitch-time-beat [n pitches durs]
+  (let [pattern (new org.jfugue.Pattern)]
+    (doseq [[pitch dur] (take n (infinitize-lists pitches durs))]
+      (add-note pattern pitch dur))
+    pattern))
+
 ;;; Infinite drunk
 
 (defn drunk-walk [step-dist]

@@ -1,7 +1,17 @@
-This is some tutorial material associated with a set of lessons I'm writing for and with my son to do music generation using Clojure and JFugue
+# clj-music
 
-The lessons themselves are here:
+FIXME: write description
 
-  https://docs.google.com/document/pub?id=1UX3DOFX3673ZDVJ9s77nixd2X8XR0pCdSWCVNIWvUu4
+## Usage
 
-Please note that this is exploratory, tutorial code, not a polished system.
+FIXME: write
+
+## Installation
+
+FIXME: write
+
+## License
+
+Copyright (C) 2010 FIXME
+
+Distributed under the Eclipse Public License, the same as Clojure.
