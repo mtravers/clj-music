@@ -1,107 +1,52 @@
 ;;; Pattern generation
 
-(defn ascending-pattern [from to dur]
+(defn take-pattern [seq n]
   (let [pattern (new org.jfugue.Pattern)]
-    (dotimes [i (- to from)]
-      (.addElement pattern (new org.jfugue.Note (byte (+ from i)) dur)))
-    pattern))
-
-(defn random-note-pattern [n dur]
-  (let [pattern (new org.jfugue.Pattern)]
-    (dotimes [i n]
-	     (.addElement pattern (new org.jfugue.Note (byte (irandom 128)) dur)))
-    pattern))
-
-;;; infinite list of random notes
-(defn random-note-list []
-  (iterate (fn [i] (irandom 128)) (irandom 128)))
-
-;;; try different way
-(defn random-melody [start var dur]
-  (iterate (fn [note] 
-	     (new org.jfugue.Note (byte (+ (.getValue note) (arandom var))) dur))
-	   start))
-
-(defn drunk [n x dur]
-  (let [pattern (new org.jfugue.Pattern)]
-    (def y)
-    (binding [y (irandom 128)]
-      (dotimes [i n]
-	(set! y (mod (+ (plusorminus x) y) 127))
-	(add-note pattern y dur))
-      pattern)))
-
-;;; Learn some more tricks
-(defn in-key-drunk [n x dur key]
-  (let [pattern (new org.jfugue.Pattern)]
-    (def y)
-    (binding [y 64]
-      (dotimes [i n]
-	(set! y (mod (+ (plusorminus x) y) 127))
-	(if (in-key? y key 64)
-	  (add-note pattern y dur))))
-      pattern))
-
-(defn ascending-pattern [from to dur]
-  (let [pattern (new org.jfugue.Pattern)]
-	(dotimes [i (- to from)]
-  	  (add-note pattern (+ from i) dur))
-	pattern))
-
-;;; Take a list of durs and apply sequentially
-(defn in-key-drunk-2 [n x durs key]
-  (let [pattern (new org.jfugue.Pattern)]
-    (def y)
-    (def rest-durs)
-    (binding [y 64 rest-durs (infinitize durs)]
-      (dotimes [i n]
-	(set! y (mod (+ (plusorminus x) y) 127))
-	(if (in-key? y key 64)
-	  (do
-	    (add-note pattern y (first rest-durs))
-	    (set! rest-durs (rest rest-durs))
-	    ))))
-    pattern))
-
-;;; (.play player (in-key-drunk-2 50 5 '(0.05 0.1 0.25) major-key))
-
-;;; 5/4 feel
-;;; (.play player (in-key-drunk-2 100 5 '(0.1 0.2 0.1 0.1) minor-key))
-
-;;; nice
-;;; (.play player (in-key-drunk-2 80 5 (scale '(2 2 3 1) 0.06) minor-key))
-
-(defn pitch-time-beat [n pitches durs]
-  (let [pattern (new org.jfugue.Pattern)]
-    (def rest-pitches)
-    (def rest-durs)
-    (binding [rest-pitches (infinitize pitches) rest-durs (infinitize durs)]
-      (dotimes [i n]
-	(do
-	  (add-note pattern (first rest-pitches) (first rest-durs))
-	  (set! rest-pitches (rest rest-pitches))
-	  (set! rest-durs (rest rest-durs))
-	  )))
-    pattern))
-
-;;; (.play player (pitch-time-beat 50 '(52 66 69 71) (scale '(4 3 1) 0.03)))
-;;; (.play player (pitch-time-beat 50 '(33 47 48 50 45) (scale '(2 1 3 2) 0.04)))
-
-;;; Less retarded version of above. Looks like I have learned something!
-(defn pitch-time-beat [n pitches durs]
-  (let [pattern (new org.jfugue.Pattern)]
-    (doseq [[pitch dur] (take n (infinitize-lists pitches durs))]
+    (doseq [[pitch dur] (take n seq)]
       (add-note pattern pitch dur))
     pattern))
 
-;;; Infinite drunk
+;;; Abstracted for a specific purpose but more useful, so should change name
+(defn pitch-time-beat [n pitches durs]
+  (take-pattern (infinitize-lists pitches durs) n))
 
-(defn drunk-walk [step-dist]
-  (iterate (fn [n] (mod (+ n (plusorminus step-dist)) 128)) 64))
+;;; (.play player (pitch-time-beat 50 '(52 66 69 71) (scale '(4 3 1) 0.03)))
+;;; (.play player (pitch-time-beat 50 '(33 47 48 50 45) (scale '(2 1 3 2) 0.04)))
+;;; (.play player (pitch-time-beat 50 (undiffs 54 (list (arandom 5) (arandom 5) (arandom 5))) (scale '(4 3 1) 0.03)))
+
+(defn ascending-pattern [from to dur]
+  (pitch-time-beat (- to from) (range from to) (infinitize (list dur))))
+
+;;; infinite list of random notes
+(defn random-note-list []
+  (iterate (fn [i] (rand-int 128)) (rand-int 128)))
+
+(defn random-note-pattern [n dur]
+  (pitch-time-beat n (random-note-list) (infinitize (list dur))))
+
+(defn drunk-walk [start step-range]
+  (iterate (fn [prev] (mod (+ (arandom step-range) prev) 127)) start))
+
+(defn drunk [n x dur]
+  (pitch-time-beat n (drunk-walk 60 x) (list dur)))
+
+(defn in-key-drunk [n x durs key]
+  (let [pitches (filter #(in-key? % key 64)
+                        (iterate #(mod (+ (arandom x) %) 127) 64))
+        durs (infinitize durs)]
+    (pitch-time-beat n pitches durs)))
+
+;;; (.play player (in-key-drunk 50 5 '(0.05 0.1 0.25) major-key))
+
+;;; 5/4 feel
+;;; (.play player (in-key-drunk 100 5 '(0.1 0.2 0.1 0.1) minor-key))
+
+;;; nice
+;;; (.play player (in-key-drunk 80 5 (scale '(2 2 3 1) 0.06) minor-key))
 
 (defn in-key-drunk-walk [step-dist key root]
   (filter (fn [n] (in-key? n key root))
- 	  (drunk-walk step-dist)))
+ 	  (drunk-walk root step-dist)))
 
 ;;; Dangerous to call outside of a thread
 (defn play-infinite [player notes]

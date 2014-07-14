@@ -10,8 +10,8 @@
 (defn member [val sequence]
   (some (fn [elt] (= elt val)) sequence))
 
-;;; Turn a list into an infinite list (looping it)
-(defn infinitize [lst]
+(defn infinitize "Turn a list into an infinite list (looping it)"
+  [lst]
   (lazy-cat lst (infinitize lst)))
 
 (comment
@@ -19,89 +19,34 @@
   (1 2 3 1 2 3 1 2 3 1 2 3 1 2 3 1 2 3 1 2)
   )
 
-;;; Loop a number of lists, letting them beat against each other.
-(defn infinitize-lists [& lsts]
-  (let [ilsts (map infinitize lsts)]
-    (cons (map first lsts)
-          (lazy-seq
-           (apply infinitize-lists (map rest lsts)))))
-  )
-
-(comment "My struggle"
-;;; this won't compile, don't understand why
-;;; guy with same (unanswered) problem: https://gist.github.com/pjb3/1886007
-;;; OH I get why it doesn't work, the recur is off in a lazy closure or something so can't actually loop...wish there as a better error.
-(defn infinitize-lists [& lsts]
-  (loop [ilsts (map infinitize lsts)]
-    (cons (map first ilsts)
-          (lazy-seq
-           (recur (map rest ilsts))))))
-
-;;; This won't work because recur is not at tail position
-(defn infinitize-lists [& lsts]
-  (loop [ilsts (map infinitize lsts)]
-    (cons (map first ilsts)
-          (recur (map rest ilsts)))))
-
-
-;;; Maybe – no, this one doesn't terminate. Fuck
-(defn infinitize-lists [& lsts]
-  (let [ilsts (map infinitize lsts)]
-    (cons (map first ilsts)
-          (lazy-seq
-           (map next ilsts)))))
-
-;;; Also doesn't terminate
-(defn infinitize-lists [& lsts]
-  (let [ilsts (map infinitize lsts)]
-    (cons (map first ilsts)
-          (map rest ilsts))))
-
-;;; Really thought this would work, but it loops
-(defn infinitize-lists [& lsts]
-  (map first
-       (iterate (fn [x] (map rest x))
-                (map infinitize lsts))))
-
-;;; Nope that doesn't help
-(defn infinitize-lists [& lsts]
-  (map first
-       (lazy-seq
-        (iterate (fn [x] (map next x))
-                 (map infinitize lsts)))))
-
-;;; Closer...
-(defn infinitize-lists [& lsts]
-  (map (comp first first)
-       (iterate (fn [x] (map rest x))
-                (map infinitize lsts))))
-
-)
-
-;;; At last!
-(defn infinitize-lists [& lsts]
+;;; This was hard as hell to get right.
+(defn infinitize-lists "Generate lists of elements from each list, cycling each indepenently"
+  [& lsts]
   (map #(map first %)
        (iterate (fn [x] (map rest x))
                 (map infinitize lsts))))
-
 
 (comment
   (take 20 (infinitize-lists '(a b c d) '(1 2 3)))
   ((a 1) (b 2) (c 3) (d 1) (a 2) (b 3) (c 1) (d 2) (a 3) (b 1) (c 2) (d 3) (a 1) (b 2) (c 3) (d 1) (a 2) (b 3) (c 1) (d 2))
   )
 
+;;; Idea for functional analog of these
+
 ;;; Scale a number (+++ hm, rename this for musical context!)
 (defn scale [list v]
   (map (fn [e] (* v e)) list))
 
-(defn diffs [l]
+(defn diffs "Return a list of the differences between adjacent elts of list l"
+  [l]
   (map - (rest l) l))
 
 (comment
   (diffs '(52 66 69 71))
   (14 3 2))
 
-(defn undiffs [root diffs]
+(defn undiffs 
+  [root diffs]
   (cons root (map #(+ root %) diffs)))
 
 (comment
@@ -114,17 +59,10 @@
 
 ;;; Randomness
 
-;;; An integer random number in range [0,n)
-(defn irandom [n]
-  (Math/round (Math/floor (* n (Math/random)))))
-
-;;; range [-n..n]
-(defn arandom [n]
-  (- (Math/round (Math/floor (+ 1 (* 2 n (Math/random))))) n))
-
-;;; random centered around 0 (+++ needs a better name)
-(defn plusorminus [n]
-  (- (irandom (* 2 (+ n 1))) n))
+;;; (+++ needs a better name)
+(defn arandom "Random int centered around 0" 
+  [n]
+  (- (rand-int (+ 1 (* 2 n))) n))
 
 ;;; Note manipulation
 
